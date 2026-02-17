@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AkadBuilder Pro - Online Mode</title>
+    <title>AkadBuilder Pro - Online Collaboration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -34,18 +34,13 @@
             }
         }
 
-        .canvas-container {
-            touch-action: none;
-        }
-
-        .loading-spinner {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        .canvas-container { touch-action: none; }
+        .loading-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Smooth transitions for elements */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -56,18 +51,18 @@
             <div class="flex items-center gap-2">
                 <i data-lucide="file-text"></i>
                 <div>
-                    <h1 class="text-xl font-bold hidden md:block">AkadBuilder Pro <span class="text-xs font-normal opacity-75 ml-2 bg-emerald-700 px-2 py-0.5 rounded">Online Mode</span></h1>
+                    <h1 class="text-xl font-bold hidden md:block">AkadBuilder Pro <span class="text-xs font-normal opacity-75 ml-2 bg-emerald-700 px-2 py-0.5 rounded">Collaborative</span></h1>
                     <h1 class="text-xl font-bold md:hidden">AkadBuilder</h1>
                 </div>
             </div>
 
             <div class="flex items-center gap-3">
                 <div id="sync-status" class="hidden md:flex items-center gap-2 mr-2">
-                    <!-- Dynamic status -->
+                    <span class="text-xs text-emerald-200 flex items-center gap-1 opacity-50"><i data-lucide="wifi-off" class="w-3 h-3"></i> Offline</span>
                 </div>
 
                 <button id="btn-share" class="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm transition-all shadow-sm bg-emerald-600 text-white hover:bg-emerald-500">
-                    <i data-lucide="link"></i>
+                    <i data-lucide="share-2"></i>
                     <span class="hidden sm:inline" id="share-text">Bagikan Link</span>
                 </button>
 
@@ -80,10 +75,10 @@
     </nav>
 
     <!-- Info Banner -->
-    <div class="bg-blue-50 border-b border-blue-100 p-2 text-center text-sm text-blue-800 print-hidden">
+    <div id="info-banner" class="bg-blue-50 border-b border-blue-100 p-2 text-center text-sm text-blue-800 print-hidden">
         <p class="flex justify-center items-center gap-2">
-            <i data-lucide="info" size="16"></i>
-            <span>Isi data Anda, lalu klik tombol <strong>Bagikan Link</strong> untuk mengirim formulir ini ke Mitra Anda.</span>
+            <i data-lucide="info" size="16" class="shrink-0"></i>
+            <span>Setiap perubahan akan tersimpan otomatis. Link ini bisa dibuka bersama oleh semua pihak.</span>
         </p>
     </div>
 
@@ -95,7 +90,7 @@
             <!-- Pengaturan Umum -->
             <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="pen-tool"></i> Pengaturan Umum
+                    <i data-lucide="settings"></i> Pengaturan Umum
                 </h2>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -113,7 +108,7 @@
                         </select>
                     </div>
                 </div>
-                <div id="share-warning" class="mt-4 p-3 rounded text-sm font-medium flex justify-between items-center bg-red-100 text-red-800">
+                <div id="share-warning" class="mt-4 p-3 rounded text-sm font-medium flex justify-between items-center bg-red-100 text-red-800 transition-colors">
                     <span id="total-share-text">Total Bagi Hasil: 0%</span>
                     <span id="share-check-icon"></span>
                 </div>
@@ -124,12 +119,12 @@
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-gray-700">Data Pihak / Anggota</h3>
                     <button id="btn-add-member" class="flex items-center gap-1 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 transition">
-                        <i data-lucide="plus" size="14"></i> Tambah Anggota
+                        <i data-lucide="plus" size="14"></i> Tambah Pihak
                     </button>
                 </div>
 
                 <div id="members-container" class="space-y-4">
-                    <!-- Members will be injected here -->
+                    <!-- Dinamis melalui JS -->
                 </div>
             </div>
         </div>
@@ -137,56 +132,47 @@
         <!-- KOLOM KANAN: PREVIEW -->
         <div class="w-full xl:w-3/5 flex justify-center bg-gray-200 xl:bg-transparent p-2 xl:p-0 rounded overflow-x-auto">
             <div id="print-area" class="bg-white w-full max-w-[210mm] min-h-[297mm] p-12 shadow-2xl print:shadow-none print:w-full print:max-w-none print:p-0 text-gray-900 leading-relaxed relative flex flex-col">
-                <!-- Header -->
+                <!-- Content Preview Area -->
                 <div class="text-center mb-8 border-b-2 border-black pb-4">
                     <h1 class="text-2xl font-bold uppercase tracking-wide">Akad Syirkah Musyarakah</h1>
                     <p class="text-sm font-serif italic mt-1" id="preview-no-akad">Nomor: ...</p>
                 </div>
-
                 <div class="text-center font-serif text-xl mb-6">Bismillāhirraḥmānirraḥīm</div>
-
-                <div class="text-justify text-sm md:text-base space-y-6 font-serif flex-grow" id="preview-content">
+                <div class="text-justify text-sm md:text-base space-y-6 font-serif flex-grow">
                     <p>Pada hari ini, <strong id="preview-date">...</strong>, kami yang bertanda tangan di bawah ini sepakat melakukan kerja sama usaha (Syirkah) dengan ketentuan sebagai berikut:</p>
-                    
                     <div>
                         <h3 class="font-bold mb-2 bg-gray-100 print:bg-transparent inline-block px-2 py-1 rounded">1️⃣ Para Pihak</h3>
                         <div id="preview-members-list" class="pl-4 space-y-4"></div>
                     </div>
-
                     <div>
                         <h3 class="font-bold mb-1 bg-gray-100 print:bg-transparent inline-block px-2 py-1 rounded">2️⃣ Pembagian Keuntungan (Nisbah)</h3>
                         <div class="pl-4">
                             <p>Keuntungan bersih usaha (Net Profit) akan dibagikan secara <strong id="preview-frequency">...</strong> dengan proporsi:</p>
                             <ul id="preview-shares-list" class="list-disc ml-6 mt-2 mb-2"></ul>
-                            <p id="preview-share-error" class="text-red-600 font-bold text-xs bg-red-100 p-1 inline-block print-hidden hidden"></p>
                         </div>
                     </div>
-
                     <div>
                         <h3 class="font-bold mb-1 bg-gray-100 print:bg-transparent inline-block px-2 py-1 rounded">3️⃣ Ketentuan Usaha</h3>
                         <ul class="list-disc ml-8 pl-4 space-y-1">
-                            <li>Kerugian finansial ditanggung oleh para pemodal sesuai porsi modal (kecuali jika ada kelalaian pengelola).</li>
-                            <li>Segala aktivitas usaha harus mematuhi kebijakan dan peraturan perundang-undangan yang berlaku.</li>
-                            <li>Kejujuran dan transparansi (Keterbukaan) adalah landasan utama akad ini.</li>
+                            <li>Kerugian finansial ditanggung oleh para pemodal sesuai porsi modal.</li>
+                            <li>Kejujuran dan transparansi adalah landasan utama akad ini.</li>
                         </ul>
                     </div>
                 </div>
-
-                <!-- Footer Signatures -->
+                <!-- Footer -->
                 <div class="mt-12 pt-4 border-t-2 border-gray-800 break-inside-avoid">
-                    <p class="text-center italic text-gray-600 mb-8">Demikian akad ini dibuat dengan kesadaran penuh dan tanpa paksaan.</p>
                     <div id="preview-signatures-grid" class="grid grid-cols-2 md:grid-cols-3 gap-y-12 gap-x-8 text-center"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modals for Camera & Signature -->
+    <!-- Modals -->
     <div id="modal-camera" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl p-6 w-full max-w-md text-center">
             <video id="camera-video" autoplay playsinline class="w-full bg-black rounded mb-4"></video>
             <div class="flex gap-2 justify-center">
-                <button id="btn-capture" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">Ambil Foto</button>
+                <button id="btn-capture" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 flex items-center gap-2"><i data-lucide="camera" size="18"></i> Ambil Foto</button>
                 <button id="btn-close-camera" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Batal</button>
             </div>
         </div>
@@ -194,293 +180,213 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- FIREBASE CONFIG ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyBYHrCidW3vrJHldgEbHqjeYYphl5f7DlM",
-                authDomain: "texa-f4b30.firebaseapp.com",
-                projectId: "texa-f4b30",
-                storageBucket: "texa-f4b30.firebasestorage.app",
-                messagingSenderId: "922894298029",
-                appId: "1:922894298029:web:5c1bf375c2bb61b0cb8f24",
-            };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBYHrCidW3vrJHldgEbHqjeYYphl5f7DlM",
+            authDomain: "texa-f4b30.firebaseapp.com",
+            projectId: "texa-f4b30",
+            storageBucket: "texa-f4b30.firebasestorage.app",
+            messagingSenderId: "922894298029",
+            appId: "1:922894298029:web:5c1bf375c2bb61b0cb8f24",
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'akad-syirkah-pro-v1';
 
-        // --- STATE MANAGEMENT ---
+        // --- GLOBAL STATE ---
         let state = {
-            generalData: {
-                startDate: new Date().toISOString().split('T')[0],
-                frequency: 'bulanan',
-            },
+            generalData: { startDate: new Date().toISOString().split('T')[0], frequency: 'bulanan' },
             members: [
-                { id: 1, role: 'Pihak Pertama (Owner)', name: '', share: 60, photo: null, signature: null, useMaterai: true },
-                { id: 2, role: 'Pihak Kedua (Pengelola)', name: '', share: 40, photo: null, signature: null, useMaterai: false },
+                { id: "1", role: 'Pihak Pertama (Owner)', name: '', share: 60, photo: null, signature: null, useMaterai: true },
+                { id: "2", role: 'Pihak Kedua (Pengelola)', name: '', share: 40, photo: null, signature: null, useMaterai: false },
             ],
             sessionId: null,
             user: null,
-            syncStatus: 'offline' // offline, syncing, saved, error
+            syncStatus: 'offline'
         };
 
         let autoSaveTimeout = null;
-        let activeMemberId = null; // For camera/signature callbacks
+        let activeMemberId = null;
         let mediaStream = null;
 
-        // --- UTILS ---
-        const formatDateIndo = (dateString) => {
-            if (!dateString) return "____________________";
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        };
-
-        const updateSyncIndicator = () => {
+        // --- CORE FUNCTIONS ---
+        const updateSyncUI = () => {
             const container = document.getElementById('sync-status');
-            container.innerHTML = '';
-            if (state.syncStatus === 'syncing') {
-                container.innerHTML = `<span class="text-xs text-emerald-200 flex items-center gap-1"><i data-lucide="loader-2" class="loading-spinner w-3 h-3"></i> Menyimpan...</span>`;
-            } else if (state.syncStatus === 'saved') {
-                container.innerHTML = `<span class="text-xs text-emerald-200 flex items-center gap-1"><i data-lucide="cloud" class="w-3 h-3"></i> Tersimpan</span>`;
-            } else if (state.syncStatus === 'error') {
-                container.innerHTML = `<span class="text-xs text-red-300">Gagal Sync</span>`;
-            }
+            container.classList.remove('hidden');
+            let icon = 'cloud-off', text = 'Offline', color = 'text-gray-400';
+            
+            if (state.syncStatus === 'syncing') { icon = 'refresh-cw'; text = 'Menyimpan...'; color = 'text-emerald-200 animate-pulse'; }
+            else if (state.syncStatus === 'saved') { icon = 'cloud'; text = 'Tersimpan'; color = 'text-emerald-300'; }
+            else if (state.syncStatus === 'error') { icon = 'alert-circle'; text = 'Error Sync'; color = 'text-red-300'; }
+            
+            container.innerHTML = `<span class="text-xs ${color} flex items-center gap-1"><i data-lucide="${icon}" class="w-3 h-3 ${state.syncStatus === 'syncing' ? 'loading-spinner' : ''}"></i> ${text}</span>`;
             lucide.createIcons();
         };
 
-        // --- LOGIC: FIREBASE SYNC ---
-        const saveData = async () => {
-            if (!state.user || !state.sessionId) return;
+        const debouncedSave = () => {
             state.syncStatus = 'syncing';
-            updateSyncIndicator();
-
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'akad_sessions', state.sessionId);
-                await setDoc(docRef, {
-                    generalData: state.generalData,
-                    members: state.members,
-                    lastUpdated: serverTimestamp(),
-                    updatedBy: state.user.uid
-                }, { merge: true });
-                state.syncStatus = 'saved';
-            } catch (err) {
-                console.error("Save Error:", err);
-                state.syncStatus = 'error';
-            }
-            updateSyncIndicator();
-        };
-
-        const triggerAutoSave = () => {
+            updateSyncUI();
             if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
-            autoSaveTimeout = setTimeout(saveData, 1500);
+            autoSaveTimeout = setTimeout(async () => {
+                if (!state.user || !state.sessionId) return;
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'akad_sessions', state.sessionId);
+                    await setDoc(docRef, {
+                        generalData: state.generalData,
+                        members: state.members,
+                        lastUpdated: serverTimestamp()
+                    }, { merge: true });
+                    state.syncStatus = 'saved';
+                } catch (e) {
+                    console.error("Save Error", e);
+                    state.syncStatus = 'error';
+                }
+                updateSyncUI();
+            }, 1000);
         };
 
-        // --- LOGIC: RENDERER ---
+        // --- RENDERERS ---
         const renderMembers = () => {
             const container = document.getElementById('members-container');
-            container.innerHTML = '';
+            
+            state.members.forEach(member => {
+                let existingDiv = document.getElementById(`member-card-${member.id}`);
+                
+                if (!existingDiv) {
+                    existingDiv = document.createElement('div');
+                    existingDiv.id = `member-card-${member.id}`;
+                    existingDiv.className = "bg-white p-5 rounded-xl shadow border border-gray-200 relative group fade-in";
+                    container.appendChild(existingDiv);
+                }
 
-            state.members.forEach((member, index) => {
-                const div = document.createElement('div');
-                div.className = "bg-white p-5 rounded-xl shadow border border-gray-200 relative group animate-in fade-in";
-                div.innerHTML = `
-                    <button onclick="removeMember(${member.id})" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition" title="Hapus Anggota">
-                        <i data-lucide="trash-2" size="18"></i>
-                    </button>
+                const isRoleFocused = document.activeElement && document.activeElement.id === `input-role-${member.id}`;
+                const isNameFocused = document.activeElement && document.activeElement.id === `input-name-${member.id}`;
+                const isShareFocused = document.activeElement && document.activeElement.id === `input-share-${member.id}`;
+
+                existingDiv.innerHTML = `
+                    <button onclick="removeMember('${member.id}')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition"><i data-lucide="trash-2" size="18"></i></button>
                     <div class="space-y-4">
                         <div class="grid grid-cols-12 gap-3">
-                            <div class="col-span-12 md:col-span-8">
-                                <label class="block text-xs text-gray-500 uppercase mb-1">Peran / Jabatan</label>
-                                <input type="text" value="${member.role}" oninput="updateMember(${member.id}, 'role', this.value)" 
-                                    class="w-full p-2 border rounded text-sm font-semibold text-emerald-800 bg-emerald-50 focus:bg-white transition">
+                            <div class="col-span-8">
+                                <label class="block text-xs text-gray-500 uppercase mb-1">Peran</label>
+                                <input type="text" id="input-role-${member.id}" value="${member.role}" oninput="updateMemberState('${member.id}', 'role', this.value)" class="w-full p-2 border rounded text-sm font-semibold text-emerald-800 bg-emerald-50 focus:bg-white outline-none">
                             </div>
-                            <div class="col-span-12 md:col-span-4">
-                                <label class="block text-xs text-gray-500 uppercase mb-1">Share (%)</label>
-                                <input type="number" value="${member.share}" oninput="updateMember(${member.id}, 'share', this.value)" 
-                                    class="w-full p-2 border rounded text-center font-mono">
+                            <div class="col-span-4">
+                                <label class="block text-xs text-gray-500 uppercase mb-1">Share %</label>
+                                <input type="number" id="input-share-${member.id}" value="${member.share}" oninput="updateMemberState('${member.id}', 'share', this.value)" class="w-full p-2 border rounded text-center font-mono outline-none">
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 uppercase mb-1">Nama Lengkap</label>
-                            <input type="text" value="${member.name}" oninput="updateMember(${member.id}, 'name', this.value)" 
-                                class="w-full p-2 border rounded text-lg font-medium" placeholder="Nama sesuai KTP">
+                            <input type="text" id="input-name-${member.id}" value="${member.name}" oninput="updateMemberState('${member.id}', 'name', this.value)" class="w-full p-2 border rounded text-lg font-medium outline-none" placeholder="Isi nama...">
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                            <div>
-                                <label class="block text-xs text-gray-500 uppercase mb-2 flex items-center gap-1">
-                                    <i data-lucide="camera" class="w-3.5 h-3.5"></i> Foto Wajah
-                                </label>
-                                <div class="border rounded bg-gray-50 p-2 text-center min-h-[100px] flex items-center justify-center">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <span class="block text-[10px] text-gray-400 uppercase mb-1">Foto Selfie</span>
+                                <div class="border rounded bg-gray-50 p-2 min-h-[120px] flex items-center justify-center">
                                     ${member.photo ? `
-                                        <div class="relative inline-block">
-                                            <img src="${member.photo}" class="h-32 rounded border bg-white object-cover">
-                                            <button onclick="updateMember(${member.id}, 'photo', null)" class="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow hover:bg-red-600">
-                                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                            </button>
-                                        </div>
-                                    ` : `
-                                        <button onclick="openCamera(${member.id})" class="flex flex-col items-center justify-center gap-2 w-full py-4 border-2 border-dashed border-gray-300 rounded hover:bg-gray-100 text-gray-500">
-                                            <i data-lucide="camera" class="w-5 h-5"></i>
-                                            <span class="text-xs font-medium">Buka Kamera</span>
-                                        </button>
-                                    `}
+                                        <div class="relative"><img src="${member.photo}" class="h-28 rounded shadow-sm border"><button onclick="updateMemberState('${member.id}', 'photo', null)" class="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full"><i data-lucide="x" size="12"></i></button></div>
+                                    ` : `<button onclick="openCamera('${member.id}')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-emerald-600"><i data-lucide="camera" size="24"></i><span class="text-[10px]">Ambil Foto</span></button>`}
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 uppercase mb-2 flex items-center gap-1">
-                                    <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i> Tanda Tangan
-                                </label>
-                                <div class="border rounded bg-gray-50 p-2 text-center">
-                                    <div class="relative bg-white border shadow-inner">
-                                        <canvas id="canvas-${member.id}" width="300" height="150" class="cursor-crosshair w-full h-[120px]"></canvas>
-                                        <button onclick="clearSignature(${member.id})" class="absolute top-2 right-2 bg-red-100 p-1.5 rounded-full text-red-600 hover:bg-red-200 shadow-sm">
-                                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                        </button>
-                                    </div>
-                                    <p class="text-[10px] text-gray-400 mt-1 italic">Goreskan tanda tangan di atas</p>
+                            <div class="text-center">
+                                <span class="block text-[10px] text-gray-400 uppercase mb-1">Tanda Tangan</span>
+                                <div class="border rounded bg-white p-1 relative">
+                                    <canvas id="canvas-${member.id}" width="200" height="100" class="w-full h-[110px] cursor-crosshair"></canvas>
+                                    <button onclick="clearSig('${member.id}')" class="absolute top-1 right-1 text-red-400"><i data-lucide="refresh-cw" size="12"></i></button>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 pt-2 border-t mt-2">
-                            <input type="checkbox" id="materai-${member.id}" ${member.useMaterai ? 'checked' : ''} 
-                                onchange="updateMember(${member.id}, 'useMaterai', this.checked)" class="w-4 h-4 text-emerald-600 rounded">
-                            <label for="materai-${member.id}" class="text-sm text-gray-700 flex items-center gap-1 select-none cursor-pointer">
-                                <i data-lucide="image" class="w-3.5 h-3.5"></i> Tempel Materai Digital
-                            </label>
+                        <div class="flex items-center gap-2 pt-2 border-t">
+                            <input type="checkbox" id="mat-${member.id}" ${member.useMaterai ? 'checked' : ''} onchange="updateMemberState('${member.id}', 'useMaterai', this.checked)">
+                            <label for="mat-${member.id}" class="text-xs text-gray-600 flex items-center gap-1 cursor-pointer"><i data-lucide="stamp" size="12"></i> Gunakan Materai Digital</label>
                         </div>
                     </div>
                 `;
-                container.appendChild(div);
+
+                if (isRoleFocused) document.getElementById(`input-role-${member.id}`).focus();
+                if (isNameFocused) document.getElementById(`input-name-${member.id}`).focus();
+                if (isShareFocused) document.getElementById(`input-share-${member.id}`).focus();
+                
                 initCanvas(member);
             });
+
+            const currentIds = state.members.map(m => `member-card-${m.id}`);
+            Array.from(container.children).forEach(child => {
+                if (!currentIds.includes(child.id)) child.remove();
+            });
+
             lucide.createIcons();
             renderPreview();
         };
 
         const renderPreview = () => {
-            const totalShare = state.members.reduce((acc, curr) => acc + (parseFloat(curr.share) || 0), 0);
-            
-            // General
-            document.getElementById('preview-date').innerText = formatDateIndo(state.generalData.startDate);
+            const total = state.members.reduce((a, b) => a + (parseFloat(b.share) || 0), 0);
+            document.getElementById('preview-date').innerText = new Date(state.generalData.startDate).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
             document.getElementById('preview-frequency').innerText = state.generalData.frequency;
-            document.getElementById('total-share-text').innerText = `Total Bagi Hasil: ${totalShare}%`;
+            document.getElementById('total-share-text').innerText = `Total Bagi Hasil: ${total}%`;
             
-            const warningBox = document.getElementById('share-warning');
-            const shareIcon = document.getElementById('share-check-icon');
-            if(totalShare === 100) {
-                warningBox.className = "mt-4 p-3 rounded text-sm font-medium flex justify-between items-center bg-green-100 text-green-800";
-                shareIcon.innerHTML = '<i data-lucide="check" size="18"></i>';
-                document.getElementById('preview-share-error').classList.add('hidden');
-            } else {
-                warningBox.className = "mt-4 p-3 rounded text-sm font-medium flex justify-between items-center bg-red-100 text-red-800";
-                shareIcon.innerHTML = '<span class="text-xs">(Harus 100%)</span>';
-                const err = document.getElementById('preview-share-error');
-                err.innerText = `PERINGATAN: Total pembagian belum 100% (Saat ini: ${totalShare}%)`;
-                err.classList.remove('hidden');
-            }
+            const warn = document.getElementById('share-warning');
+            warn.className = `mt-4 p-3 rounded text-sm font-medium flex justify-between items-center ${total === 100 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
 
-            // Members List
-            const pList = document.getElementById('preview-members-list');
-            pList.innerHTML = state.members.map((m, idx) => `
-                <div class="flex gap-3">
-                    <div class="font-bold">${idx + 1}.</div>
-                    <div class="w-full">
-                        <div class="flex justify-between items-baseline border-b border-dotted border-gray-400 pb-1">
-                            <span class="font-bold">${m.name || "................................................"}</span>
-                            <span class="text-xs text-gray-500 italic">(${m.role})</span>
-                        </div>
-                        ${m.photo ? `
-                            <div class="mt-1">
-                                <img src="${m.photo}" class="h-12 w-12 object-cover rounded-full border border-gray-300 print-grayscale">
-                                <span class="text-[10px] text-gray-500 ml-2 align-middle">Verifikasi Wajah: Terlampir</span>
-                            </div>
-                        ` : ''}
+            document.getElementById('preview-members-list').innerHTML = state.members.map((m,i) => `
+                <div class="flex gap-2"><span>${i+1}.</span><div class="border-b border-dotted border-gray-400 w-full flex justify-between"><b>${m.name || '...'}</b><i class="text-xs text-gray-400">(${m.role})</i></div></div>
+            `).join('');
+
+            document.getElementById('preview-shares-list').innerHTML = state.members.map(m => `<li>${m.role}: <b>${m.share}%</b></li>`).join('');
+
+            document.getElementById('preview-signatures-grid').innerHTML = state.members.map(m => `
+                <div class="flex flex-col items-center relative">
+                    <span class="text-xs font-bold mb-1">${m.role}</span>
+                    <div class="h-24 w-full flex items-center justify-center relative">
+                        ${m.useMaterai ? '<div class="absolute border border-blue-200 bg-blue-50 text-[8px] text-blue-300 p-1 rotate-12">MATERAI 10000</div>' : ''}
+                        ${m.signature ? `<img src="${m.signature}" class="max-h-20 mix-blend-multiply">` : ''}
                     </div>
+                    <span class="border-t border-black w-full text-xs font-bold pt-1">${m.name || '(................)'}</span>
                 </div>
             `).join('');
-
-            // Shares List
-            document.getElementById('preview-shares-list').innerHTML = state.members.map(m => `
-                <li>${m.role}: <strong>${m.share}%</strong></li>
-            `).join('');
-
-            // Signatures Grid
-            const sigGrid = document.getElementById('preview-signatures-grid');
-            sigGrid.innerHTML = state.members.map(m => `
-                <div class="flex flex-col items-center break-inside-avoid relative">
-                    <p class="font-bold text-sm mb-2">${m.role}</p>
-                    <div class="h-28 w-full flex items-end justify-center relative">
-                        ${m.useMaterai ? `
-                            <div class="absolute inset-0 flex items-center justify-center opacity-80 pointer-events-none z-0">
-                                <div class="border-2 border-blue-300 bg-blue-50 text-blue-400 text-[10px] w-20 h-12 flex items-center justify-center text-center font-mono leading-tight rotate-3">
-                                    METERAI<br/>TEMPEL<br/>10000
-                                </div>
-                            </div>
-                        ` : ''}
-                        ${m.signature ? `<img src="${m.signature}" class="max-h-24 max-w-full z-10 mix-blend-multiply relative -top-2">` : '<div class="h-16"></div>'}
-                    </div>
-                    <p class="border-b border-black w-full font-bold z-10 relative mt-1">${m.name || "(....................)"}</p>
-                </div>
-            `).join('');
-
-            lucide.createIcons();
         };
 
-        // --- INTERACTIVITY ---
-        window.updateMember = (id, field, value) => {
+        // --- HANDLERS ---
+        window.updateMemberState = (id, field, value) => {
             const member = state.members.find(m => m.id === id);
             if (member) {
-                member[field] = field === 'share' ? parseFloat(value) || 0 : value;
+                member[field] = (field === 'share') ? parseFloat(value) || 0 : value;
                 renderPreview();
-                triggerAutoSave();
+                debouncedSave();
             }
         };
 
         window.removeMember = (id) => {
-            if (state.members.length <= 1) return alert("Minimal harus ada 1 pihak.");
+            if (state.members.length <= 1) return;
             state.members = state.members.filter(m => m.id !== id);
             renderMembers();
-            triggerAutoSave();
+            debouncedSave();
         };
 
-        document.getElementById('btn-add-member').onclick = () => {
-            const newId = state.members.length > 0 ? Math.max(...state.members.map(m => m.id)) + 1 : 1;
-            state.members.push({ 
-                id: newId, role: `Mitra ${state.members.length + 1}`, name: '', share: 0, 
-                photo: null, signature: null, useMaterai: false 
-            });
-            renderMembers();
-            triggerAutoSave();
-        };
-
-        document.getElementById('input-start-date').onchange = (e) => {
-            state.generalData.startDate = e.target.value;
-            renderPreview();
-            triggerAutoSave();
-        };
-
-        document.getElementById('input-frequency').onchange = (e) => {
-            state.generalData.frequency = e.target.value;
-            renderPreview();
-            triggerAutoSave();
-        };
-
-        // --- CAMERA LOGIC ---
-        window.openCamera = async (memberId) => {
-            activeMemberId = memberId;
+        window.openCamera = async (id) => {
+            activeMemberId = id;
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('camera-video');
                 video.srcObject = mediaStream;
                 document.getElementById('modal-camera').classList.remove('hidden');
-            } catch (err) {
-                alert("Gagal membuka kamera. Izinkan akses kamera.");
-            }
+            } catch (e) { alert("Akses kamera ditolak."); }
+        };
+
+        document.getElementById('btn-capture').onclick = () => {
+            const video = document.getElementById('camera-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = 400; canvas.height = 300;
+            canvas.getContext('2d').drawImage(video, 0, 0, 400, 300);
+            updateMemberState(activeMemberId, 'photo', canvas.toDataURL('image/jpeg', 0.7));
+            document.getElementById('btn-close-camera').click();
+            renderMembers();
         };
 
         document.getElementById('btn-close-camera').onclick = () => {
@@ -488,30 +394,12 @@
             document.getElementById('modal-camera').classList.add('hidden');
         };
 
-        document.getElementById('btn-capture').onclick = () => {
-            const video = document.getElementById('camera-video');
-            const canvas = document.createElement('canvas');
-            canvas.width = 640;
-            canvas.height = 480;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            
-            updateMember(activeMemberId, 'photo', dataUrl);
-            renderMembers();
-            document.getElementById('btn-close-camera').click();
-        };
-
-        // --- CANVAS SIGNATURE LOGIC ---
         const initCanvas = (member) => {
             const canvas = document.getElementById(`canvas-${member.id}`);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = '#000';
-
-            // Load existing
+            ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+            
             if (member.signature) {
                 const img = new Image();
                 img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -521,66 +409,79 @@
             let drawing = false;
             const getPos = (e) => {
                 const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                // Scale factor if CSS size differs from internal size
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                return { x: x * (canvas.width / rect.width), y: y * (canvas.height / rect.height) };
             };
-
-            const start = (e) => { drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); };
-            const move = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); };
-            const end = () => { 
-                if(drawing) {
-                    drawing = false; 
-                    updateMember(member.id, 'signature', canvas.toDataURL());
-                }
-            };
-
-            canvas.onmousedown = start; canvas.onmousemove = move; window.onmouseup = end;
-            canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end;
+            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+            canvas.onmousemove = canvas.ontouchmove = (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); };
+            window.onmouseup = canvas.ontouchend = () => { if (drawing) { drawing = false; updateMemberState(member.id, 'signature', canvas.toDataURL()); } };
         };
 
-        window.clearSignature = (id) => {
+        window.clearSig = (id) => {
             const canvas = document.getElementById(`canvas-${id}`);
-            if(canvas) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                updateMember(id, 'signature', null);
+            canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+            updateMemberState(id, 'signature', null);
+        };
+
+        document.getElementById('btn-add-member').onclick = () => {
+            const newId = Date.now().toString();
+            state.members.push({ id: newId, role: `Mitra ${state.members.length+1}`, name: '', share: 0, photo: null, signature: null, useMaterai: false });
+            renderMembers();
+            debouncedSave();
+        };
+
+        document.getElementById('btn-share').onclick = () => {
+            try {
+                const urlObj = new URL(window.location.href);
+                urlObj.searchParams.set('session', state.sessionId);
+                const shareUrl = urlObj.toString();
+                
+                // Fallback method for clipboard copying in sandboxed environments
+                const textArea = document.createElement("textarea");
+                textArea.value = shareUrl;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                let success = false;
+                try {
+                    success = document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                
+                document.body.removeChild(textArea);
+                
+                if (success) {
+                    const btn = document.getElementById('btn-share');
+                    const txt = document.getElementById('share-text');
+                    const oldText = txt.innerText;
+                    txt.innerText = 'Link Disalin!';
+                    btn.classList.replace('bg-emerald-600', 'bg-green-500');
+                    setTimeout(() => { txt.innerText = oldText; btn.classList.replace('bg-green-500', 'bg-emerald-600'); }, 2000);
+                } else {
+                    prompt("Salin link ini secara manual:", shareUrl);
+                }
+            } catch (e) {
+                alert(`Session ID: ${state.sessionId}`);
             }
         };
 
-        // --- SHARE LOGIC ---
-        document.getElementById('btn-share').onclick = () => {
-            const baseUrl = window.location.href.split('?')[0];
-            const shareUrl = `${baseUrl}?session=${state.sessionId}`;
-            
-            const btnText = document.getElementById('share-text');
-            const btn = document.getElementById('btn-share');
-
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                const originalText = btnText.innerText;
-                btnText.innerText = 'Link Disalin!';
-                btn.classList.replace('bg-emerald-600', 'bg-green-500');
-                setTimeout(() => {
-                    btnText.innerText = originalText;
-                    btn.classList.replace('bg-green-500', 'bg-emerald-600');
-                }, 2000);
-            }).catch(() => {
-                prompt("Salin link ini:", shareUrl);
-            });
-        };
-
-        // --- INITIALIZATION ---
+        // --- INIT ---
         window.onload = async () => {
-            // Setup Session
             const params = new URLSearchParams(window.location.search);
-            let currentSessionId = params.get('session') || crypto.randomUUID();
-            state.sessionId = currentSessionId;
+            state.sessionId = params.get('session');
+            
+            if (!state.sessionId) {
+                state.sessionId = crypto.randomUUID();
+            }
+
             document.getElementById('preview-no-akad').innerText = `Nomor: ${state.sessionId.slice(0,6).toUpperCase()}/SYR/${new Date().getFullYear()}`;
 
-            // Auth
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -592,34 +493,36 @@
             onAuthStateChanged(auth, (user) => {
                 state.user = user;
                 if (user) {
-                    // Listen Realtime
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'akad_sessions', state.sessionId);
                     onSnapshot(docRef, (snap) => {
                         if (snap.exists()) {
                             const data = snap.data();
-                            if(data.generalData) {
-                                state.generalData = data.generalData;
-                                document.getElementById('input-start-date').value = state.generalData.startDate;
-                                document.getElementById('input-frequency').value = state.generalData.frequency;
-                            }
-                            if(data.members) {
+                            state.generalData = data.generalData || state.generalData;
+                            document.getElementById('input-start-date').value = state.generalData.startDate;
+                            document.getElementById('input-frequency').value = state.generalData.frequency;
+
+                            if (data.members) {
                                 state.members = data.members;
                                 renderMembers();
                             }
                             state.syncStatus = 'saved';
+                        } else {
+                            debouncedSave();
                         }
-                        updateSyncIndicator();
+                        updateSyncUI();
+                    }, (err) => {
+                        state.syncStatus = 'error';
+                        updateSyncUI();
                     });
                 }
             });
 
-            // Initial render
-            document.getElementById('input-start-date').value = state.generalData.startDate;
-            document.getElementById('input-frequency').value = state.generalData.frequency;
-            renderMembers();
-            updateSyncIndicator();
-        };
+            document.getElementById('input-start-date').onchange = (e) => { state.generalData.startDate = e.target.value; renderPreview(); debouncedSave(); };
+            document.getElementById('input-frequency').onchange = (e) => { state.generalData.frequency = e.target.value; renderPreview(); debouncedSave(); };
 
+            renderMembers();
+            updateSyncUI();
+        };
     </script>
 </body>
 </html>
