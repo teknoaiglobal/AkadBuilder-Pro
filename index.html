@@ -233,7 +233,8 @@
             updateSyncUI();
             if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
             autoSaveTimeout = setTimeout(async () => {
-                if (!state.user || !state.sessionId) return;
+                // RULE 3: Guard firestore operation with user check
+                if (!auth.currentUser || !state.sessionId) return;
                 try {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'akad_sessions', state.sessionId);
                     await setDoc(docRef, {
@@ -243,11 +244,11 @@
                     }, { merge: true });
                     state.syncStatus = 'saved';
                 } catch (e) {
-                    console.error("Save Error", e);
+                    console.error("Firestore Save Error:", e);
                     state.syncStatus = 'error';
                 }
                 updateSyncUI();
-            }, 1000);
+            }, 1500);
         };
 
         // --- RENDERERS ---
@@ -376,7 +377,10 @@
                 const video = document.getElementById('camera-video');
                 video.srcObject = mediaStream;
                 document.getElementById('modal-camera').classList.remove('hidden');
-            } catch (e) { alert("Akses kamera ditolak."); }
+            } catch (e) { 
+                console.error("Camera Error:", e);
+                alert("Gagal membuka kamera. Mohon berikan izin kamera pada browser Anda."); 
+            }
         };
 
         document.getElementById('btn-capture').onclick = () => {
@@ -420,8 +424,10 @@
 
         window.clearSig = (id) => {
             const canvas = document.getElementById(`canvas-${id}`);
-            canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-            updateMemberState(id, 'signature', null);
+            if (canvas) {
+                canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+                updateMemberState(id, 'signature', null);
+            }
         };
 
         document.getElementById('btn-add-member').onclick = () => {
@@ -433,11 +439,12 @@
 
         document.getElementById('btn-share').onclick = () => {
             try {
-                const urlObj = new URL(window.location.href);
-                urlObj.searchParams.set('session', state.sessionId);
-                const shareUrl = urlObj.toString();
+                // Construct URL correctly for shared environments
+                const url = new URL(window.location.href);
+                url.searchParams.set('session', state.sessionId);
+                const shareUrl = url.toString();
                 
-                // Fallback method for clipboard copying in sandboxed environments
+                // Fallback method for clipboard copying
                 const textArea = document.createElement("textarea");
                 textArea.value = shareUrl;
                 textArea.style.position = "fixed";
@@ -451,7 +458,7 @@
                 try {
                     success = document.execCommand('copy');
                 } catch (err) {
-                    console.error('Fallback copy failed', err);
+                    console.error('Copy command failed', err);
                 }
                 
                 document.body.removeChild(textArea);
@@ -467,11 +474,47 @@
                     prompt("Salin link ini secara manual:", shareUrl);
                 }
             } catch (e) {
-                alert(`Session ID: ${state.sessionId}`);
+                console.error("Share Link Error:", e);
+                alert(`Gagal menyalin link. Session ID Anda adalah: ${state.sessionId}`);
             }
         };
 
-        // --- INIT ---
+        // --- INITIALIZATION ---
+        const startSync = (userId) => {
+            if (!state.sessionId) return;
+            
+            // RULE 1: Path structure artifacts/{appId}/public/data/{collection}
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'akad_sessions', state.sessionId);
+            
+            onSnapshot(docRef, (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    
+                    // Update state but keep local focus
+                    state.generalData = data.generalData || state.generalData;
+                    
+                    // Selective update for members to prevent overwrite
+                    if (data.members) {
+                        state.members = data.members;
+                        renderMembers();
+                    }
+                    
+                    document.getElementById('input-start-date').value = state.generalData.startDate;
+                    document.getElementById('input-frequency').value = state.generalData.frequency;
+                    
+                    state.syncStatus = 'saved';
+                } else {
+                    // First time save for this session
+                    debouncedSave();
+                }
+                updateSyncUI();
+            }, (error) => {
+                console.error("Firestore Sync Error:", error);
+                state.syncStatus = 'error';
+                updateSyncUI();
+            });
+        };
+
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
             state.sessionId = params.get('session');
@@ -482,41 +525,34 @@
 
             document.getElementById('preview-no-akad').innerText = `Nomor: ${state.sessionId.slice(0,6).toUpperCase()}/SYR/${new Date().getFullYear()}`;
 
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+            // RULE 3: Perform Auth before any Firestore query
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (e) {
+                    console.error("Authentication failed:", e);
+                    state.syncStatus = 'error';
+                    updateSyncUI();
                 }
-            } catch (e) { console.error("Auth Fail", e); }
+            };
 
             onAuthStateChanged(auth, (user) => {
                 state.user = user;
                 if (user) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'akad_sessions', state.sessionId);
-                    onSnapshot(docRef, (snap) => {
-                        if (snap.exists()) {
-                            const data = snap.data();
-                            state.generalData = data.generalData || state.generalData;
-                            document.getElementById('input-start-date').value = state.generalData.startDate;
-                            document.getElementById('input-frequency').value = state.generalData.frequency;
-
-                            if (data.members) {
-                                state.members = data.members;
-                                renderMembers();
-                            }
-                            state.syncStatus = 'saved';
-                        } else {
-                            debouncedSave();
-                        }
-                        updateSyncUI();
-                    }, (err) => {
-                        state.syncStatus = 'error';
-                        updateSyncUI();
-                    });
+                    startSync(user.uid);
+                } else {
+                    state.syncStatus = 'offline';
+                    updateSyncUI();
                 }
             });
 
+            await initAuth();
+
+            // Bind global events
             document.getElementById('input-start-date').onchange = (e) => { state.generalData.startDate = e.target.value; renderPreview(); debouncedSave(); };
             document.getElementById('input-frequency').onchange = (e) => { state.generalData.frequency = e.target.value; renderPreview(); debouncedSave(); };
 
